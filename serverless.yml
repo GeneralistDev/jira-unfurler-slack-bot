@@ -1,0 +1,112 @@
+service: jira-unfurler-bot 
+
+frameworkVersion: "=1.20.0"
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  region: us-west-1
+  environment:
+    MESSAGE_HANDLER: arn:aws:lambda:${opt:region}:${self:custom.environment.ACCOUNT_ID}:function:jira-unfurler-bot-${opt:stage}-message
+    REGISTER_HANDLER: arn:aws:lambda:${opt:region}:${self:custom.environment.ACCOUNT_ID}:function:jira-unfurler-bot-${opt:stage}-register
+  
+  iamRoleStatements:
+    -  Effect: "Allow"
+       Action:
+         - "lambda:InvokeFunction"
+       Resource: "arn:aws:lambda:${opt:region}:${self:custom.environment.ACCOUNT_ID}:function:*"
+
+package:
+ include:
+   - src/**
+   - node_modules/**
+ exclude:
+   - .gitignore
+   - package.json
+   - serverless.yml
+   - yarn.lock
+   - .vscode/**
+
+plugins:
+  - serverless-plugin-crypt
+
+custom:
+  environment:
+    ACCOUNT_ID: "334069501049"
+    TOKENS_TABLE: "apptokens"
+    SLACK_BOT_TOKEN: AQICAHjPcarByIYkgMWp4kQhZDf6TY8iSfffpdYXuUJ7VaC01wF/FWfk3Hrh1dwocs8KCTGIAAAAdjB0BgkqhkiG9w0BBwagZzBlAgEAMGAGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMeAH7x5ZlM8FckF5GAgEQgDOb8cd90Iv9KBfY7hXItbZ6linyHn/gN/pgHudxe8x5KTcqb2m+eIjQtbELvKX/x1IQu1Y=
+    SLACK_API_BASE: https://slack.com/api
+    SLACK_CLIENT_ID: "5170543734.227258633873"
+    SLACK_CLIENT_SECRET: AQICAHjPcarByIYkgMWp4kQhZDf6TY8iSfffpdYXuUJ7VaC01wGv1OAhDW0B9cPBNuQYoyWHAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMbItsYMOrb+Q2Lr1lAgEQgDvwXMj/OKN559Fxx9u3PLtsLYxxmpEjGkrGNaRDJdXMkcipr07Dv8Wk+GfwauPGnSm9ctqnQ1FmpkvYCA==
+  
+  crypt:
+    aws:
+      kmsKeyId: arn:aws:kms:us-west-1:334069501049:key/aa29f38f-a619-4e9a-a031-2ac926659b4a
+
+functions:
+  slackevent:
+    handler: src/handler.handler
+    events:
+      - http:
+          path: /slackevent
+          method: post
+          cors: true
+    environment:
+      SLACK_BOT_TOKEN: ${self:custom.environment.SLACK_BOT_TOKEN}
+
+  registerCallback:
+    handler: src/register.handler
+    events:
+      - http:
+          path: /register
+          method: get
+          cors: true
+
+  register:
+    handler: src/events/register.handler
+    environment:
+      TOKENS_TABLE: ${self:custom.environment.TOKENS_TABLE}
+      SLACK_API_BASE: ${self:custom.environment.SLACK_API_BASE}
+      SLACK_CLIENT_ID: ${self:custom.environment.SLACK_CLIENT_ID}
+      SLACK_CLIENT_SECRET: ${self:custom.environment.SLACK_CLIENT_SECRET}
+
+  message:
+    handler: src/events/message.handler
+    environment:
+      TOKENS_TABLE: ${self:custom.environment.TOKENS_TABLE}
+      SLACK_BOT_TOKEN: ${self:custom.environment.SLACK_BOT_TOKEN}
+      SLACK_API_BASE: ${self:custom.environment.SLACK_API_BASE}
+      SLACK_CLIENT_ID: ${self:custom.environment.SLACK_CLIENT_ID}
+      SLACK_CLIENT_SECRET: ${self:custom.environment.SLACK_CLIENT_SECRET}
+
+resources:  
+  Resources:
+    AppTokensTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:custom.environment.TOKENS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: team_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: team_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    DynamoDBIamPolicy:
+      Type: AWS::IAM::Policy
+      DependsOn: AppTokensTable
+      Properties:
+        PolicyName: lambda-dynamodb
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+              Resource: arn:aws:dynamodb:*:*:table/${self:custom.environment.TOKENS_TABLE}
+        Roles:
+          - Ref: IamRoleLambdaExecution
