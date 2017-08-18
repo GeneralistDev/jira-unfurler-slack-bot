@@ -9,7 +9,7 @@ module.exports.handler = function(event, context, callback) {
     console.log('Received event', event);
     const parameters = event;
 
-    env.getEncryptedEnvVar('SLACK_CLIENT_SECRET')
+    env.getEncryptedEnvVars('SLACK_CLIENT_SECRET')
         .then((SLACK_CLIENT_SECRET) => {
             return rp({
                 uri: `${process.env.SLACK_API_BASE}/oauth.access`,

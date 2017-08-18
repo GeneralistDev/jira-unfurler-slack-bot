@@ -38,7 +38,9 @@ custom:
     SLACK_API_BASE: https://slack.com/api
     SLACK_CLIENT_ID: "5170543734.227258633873"
     SLACK_CLIENT_SECRET: AQICAHjPcarByIYkgMWp4kQhZDf6TY8iSfffpdYXuUJ7VaC01wGv1OAhDW0B9cPBNuQYoyWHAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMbItsYMOrb+Q2Lr1lAgEQgDvwXMj/OKN559Fxx9u3PLtsLYxxmpEjGkrGNaRDJdXMkcipr07Dv8Wk+GfwauPGnSm9ctqnQ1FmpkvYCA==
-  
+    JIRA_USERNAME: AQICAHjPcarByIYkgMWp4kQhZDf6TY8iSfffpdYXuUJ7VaC01wHkgRaa+fg9qVjaM1fxrRKzAAAAbTBrBgkqhkiG9w0BBwagXjBcAgEAMFcGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMQ9n+TuPl98P8aEg6AgEQgCoLZB6bTJxGG+pneuQsk56rzacIqG0GuENv4CBj2EX8g3/nyr+tW23LcsQ=
+    JIRA_PASSWORD: AQICAHjPcarByIYkgMWp4kQhZDf6TY8iSfffpdYXuUJ7VaC01wEoFVaLltle4x1ulSluHRwmAAAAcDBuBgkqhkiG9w0BBwagYTBfAgEAMFoGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM6g5Amk46rxiKMn4yAgEQgC2t5Tlh4fNXZrijJoANIIabaQeL0yVLXcnXkfqKKsDamF5LGuozoZMUFsoEKb8=
+
   crypt:
     aws:
       kmsKeyId: arn:aws:kms:us-west-1:334069501049:key/aa29f38f-a619-4e9a-a031-2ac926659b4a
@@ -72,12 +74,11 @@ functions:
 
   message:
     handler: src/events/message.handler
+    timeout: 60
     environment:
       TOKENS_TABLE: ${self:custom.environment.TOKENS_TABLE}
-      SLACK_BOT_TOKEN: ${self:custom.environment.SLACK_BOT_TOKEN}
-      SLACK_API_BASE: ${self:custom.environment.SLACK_API_BASE}
-      SLACK_CLIENT_ID: ${self:custom.environment.SLACK_CLIENT_ID}
-      SLACK_CLIENT_SECRET: ${self:custom.environment.SLACK_CLIENT_SECRET}
+      JIRA_USERNAME: ${self:custom.environment.JIRA_USERNAME}
+      JIRA_PASSWORD: ${self:custom.environment.JIRA_PASSWORD}
 
 resources:  
   Resources:
