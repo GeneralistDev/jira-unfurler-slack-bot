@@ -42,10 +42,10 @@ module.exports.handler = function(event, context, callback) {
             .then((projectKeys) => {
                 console.log('projectKeys', projectKeys);
                 let issues = projectKeys.reduce((accum, key) => {
-                    let regex = new RegExp(`(${key}-[^\\s]+)`, 'gi');
-                    let matches = event.event.text.match(regex);
-                    if (matches) {
-                        return accum.concat(matches);
+                    let regex = new RegExp(`(^|[ ])(${key}-[0-9]+)`, 'gi');
+                    let matches = regex.exec(event.event.text);
+                    if (matches && matches[2]) {
+                        return accum.concat(matches[2]);
                     }
 
                     return accum;
